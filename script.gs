@@ -188,7 +188,9 @@ function sayText(text, userId, authToken, senderName, senderAvatar, trackingData
     'tracking_data': JSON.stringify(trackingData || {})
   };
   
-
+  if (keyboard) {
+    data.keyboard = keyboard;
+  }
   
   var options = {
     'async': true,
@@ -248,26 +250,93 @@ function createKeyboard(values) {
 }
 
 function tryToSendQuestion(postData, questionRow, questionIndex, userAnswerRow) {
-  if (!questionRow || !postData || questionIndex == undefined || userAnswerRow == undefined) return false;
+
+  var answerString = extractTextFromMessage(postData);
+
   
-  var didHandle = false;
+  switch (answerString) {
+  case '1':
+        sayText('1. Укр. мова 2. Физкультура 3. Я исслед. мир 4. Обуч. гр. 5. Англ. яз.', getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+        var didHandle = true;
+        return didHandle;
+  case '2':
+        sayText('1. Обуч. грам. 2. Укр. яз. 3. Матем. 4. Обуч. грам.', getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+        var didHandle = true;
+        return didHandle;
+  case '3':
+        sayText('1.Я исслед. мир 2. Физкульт 3. Укр. язык 4. Матем 5. Искуство', getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+        var didHandle = true;
+        return didHandle;
+  case '4':
+        sayText('1. Матем 2. Плаванье 3. Труд 4. Англ. яз. 5. Укр. мова', getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+        var didHandle = true;
+        return didHandle;
+  case '5':
+        sayText('1. Я исслед. мир 2. Матем 3. Англ. яз. 4. Обуч. грам.', getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+        var didHandle = true;
+        return didHandle;      
+    default:
+ /*
+      sayText('1 - Понедельник 2 - Вторник 3 - Среда 4 - Четверг 5 - Пятница', getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+        var didHandle = true;
+        return didHandle;     
+ */     
+      
+
+    if (!questionRow || !postData || questionIndex == undefined || userAnswerRow == undefined) return false;
   
-  var questionType = questionRow[0];
-  var questionMessage = questionRow[1];
+    var didHandle = false;
   
-  if (questionType === 'keyboard') {
-    var questionExtras = questionRow[2];
-    var keyboardFields = questionExtras.split(';');
-    var keyboardObject = createKeyboard(keyboardFields);
-    sayText(questionMessage, getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
-    didHandle = true;
+    var questionType = questionRow[0];
+    var questionMessage = questionRow[1];
+  
+    if (questionType === 'keyboard') {
+      var questionExtras = questionRow[2];
+      var keyboardFields = questionExtras.split(';');
+      var keyboardObject = createKeyboard(keyboardFields);
+      sayText(questionMessage, getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+      didHandle = true;
+    }
+    else if (questionType === 'text' || questionType === 'range') {
+      sayText(questionMessage, getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow));
+      didHandle = true;
+    }
+  
+    return didHandle;
   }
-  else if (questionType === 'text' || questionType === 'range') {
-    sayText(questionMessage, getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow));
-    didHandle = true;
-  }
   
-  return didHandle;
+  
+  
+/*  
+  if (answerString == 'Pn') {
+        sayText('1. Укр. мова 2. Физкультура 3. Я исслед. мир 4. Обуч. гр. 5. Англ. яз.', getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+        var didHandle = true;
+        return didHandle;
+  } 
+  else {
+      
+    if (!questionRow || !postData || questionIndex == undefined || userAnswerRow == undefined) return false;
+  
+    var didHandle = false;
+  
+    var questionType = questionRow[0];
+    var questionMessage = questionRow[1];
+  
+    if (questionType === 'keyboard') {
+      var questionExtras = questionRow[2];
+      var keyboardFields = questionExtras.split(';');
+      var keyboardObject = createKeyboard(keyboardFields);
+      sayText(questionMessage, getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow), keyboardObject);
+      didHandle = true;
+    }
+    else if (questionType === 'text' || questionType === 'range') {
+      sayText(questionMessage, getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateInSurvey(questionIndex, userAnswerRow));
+      didHandle = true;
+    }
+  
+    return didHandle;
+  }
+*/
 }
 
 function isValidAnswer(postData, questionRow) {
@@ -446,127 +515,3 @@ function doGet(e) {
   JSONOutput.setMimeType(ContentService.MimeType.JSON);
   return JSONOutput
 }
-
-
-/*
-
-function getSenderId(infoObOtpraviteleID) {
-  if (!infoObOtpraviteleID) return undefined;
-
-  if (infoObOtpraviteleID.sender) { // Might be a message event
-	  return infoObOtpraviteleID.sender.id;
-  }
-  else if (infoObOtpraviteleID.user) { // Might be a conversation_started event
-	return infoObOtpraviteleID.user.id;
-  }
-
-  return undefined;
-}
-
-function recordAnswer(objectMessage) {
-  var trackingData = JSON.parse(objectMessage.message.tracking_data);
-
-  var answerStringNameDay = extractTextFromMessage(objectMessage);
-  return answerStringNameDay;
-}
-
-
-function sayText(text, userId, authToken, senderName, senderAvatar, trackingData, keyboard) {
-  
-  var data = {
-    'type' : 'text',
-    'text' : text,
-    'receiver': userId,
-    'sender': {
-      'name': senderName,
-      'avatar': senderAvatar
-    },
-    'tracking_data': JSON.stringify(trackingData || {})
-  };
-  
-  if (keyboard) {
-    data.keyboard = keyboard;
-  }
-  
-  var options = {
-    'async': true,
-    'crossDomain': true,
-    'method': 'POST',
-    'headers': {
-      'X-Viber-Auth-Token': authToken,
-      'content-type': 'application/json',
-      'cache-control': 'no-cache'
-    },
-   'payload' : JSON.stringify(data)
-  }
-  
-  //Logger.log(options);
-  var result =  UrlFetchApp.fetch('https://chatapi.viber.com/pa/send_message', options);
-  
-  Logger.log(result);
-}
-
-function extractTextFromMessage(postDataIzvlechenieTexta) {                   // extract - извлечение => extractTextFromMessage - извлечение текста из message
-  if (!postDataIzvlechenieTexta || !postDataIzvlechenieTexta.message) return undefined;
-
-  return postDataIzvlechenieTexta.message.text;
-}
-
-
-
-
-function sendWelcomeMessage(postData) {
-  sayText(gWelcomeMessage, getSenderId(postData), gAccessToken, gBotName, gBotAvatar, stateSurveyStarted());
-}
-
-
-function doPost(e) {
-  Logger.log(e);
-  
- //if (!e || !e.postData || !e.postData.contents) return;
-  
-  try {
-    var postData = JSON.parse(e.postData.contents);
-            
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      
-      var parametersSheet = ss.getSheetByName('parameters');
-      
-      var parametersDataRange = parametersSheet.getRange(2, 1, 9, 2); // Skip header row; Read parameter rows
-      
-      var parametersData = parametersDataRange.getValues()
-      var gAccessToken = parametersData[0][1];
-      var gBotName = parametersData[1][1];
-      var gBotAvatar = parametersData[2][1];
-      
-      
-      var MondayTimetable = parametersData [3][1]
-      var TuesadayTimetable = parametersData [4][1]
-      var WednesdayTimetable = parametersData [5][1]
-      var ThersdayTimetable = parametersData [6][1]
-      var FridayTimetable = parametersData [7][1]
-    
-//      var trackingData = JSON.parse(postData.message.tracking_data);
-      var trackingData = 'started';
-      sayText(MondayTimetable, 'HqiREoCvp4049POKhYx7Yg==', gAccessToken, gBotName, gBotAvatar, trackingData)
-      
-  } catch(error) { 
-    Logger.log(error);
-  }
-}
-
-
-
-
-function doGet(e) {
-  var appData = {
-    'heading': 'Hello Bot!',
-    'body': 'Welcome to the Chat Bot app.'
-  };
-  
-  var JSONString = JSON.stringify(appData);
-  var JSONOutput = ContentService.createTextOutput(JSONString);
-  JSONOutput.setMimeType(ContentService.MimeType.JSON);
-  return JSONOutput
-}
-*/
